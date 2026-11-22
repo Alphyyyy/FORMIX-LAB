@@ -4,6 +4,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { SoundToggle } from './components/SoundToggle';
 import { StaffLayout } from './components/StaffLayout';
 import { VisitorLayout } from './components/VisitorLayout';
+import { WelcomePage } from './pages/WelcomePage';
 import { canAccessStep, resumePath } from './domain/flow';
 import type { FlowStep } from './domain/flow';
 import { FormixProvider, useFormix } from './state/FormixProvider';
@@ -58,7 +59,7 @@ function AppShell() {
   if (route === '/') {
     return (
       <VisitorLayout headerAction={<SoundToggle />}>
-        <RoutePlaceholder path={route} />
+        <WelcomePage />
       </VisitorLayout>
     );
   }

@@ -153,3 +153,136 @@
   border-radius: 50%;
   background: var(--rose);
 }
+
+.welcome {
+  display: grid;
+  gap: 22px;
+}
+
+.welcome__copy {
+  display: grid;
+  gap: 14px;
+}
+
+.welcome__line {
+  display: block;
+}
+
+.welcome__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-top: 4px;
+}
+
+.welcome__facts span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 253, 251, 0.72);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.welcome__mascot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 152px;
+  padding: 6px 12px 0;
+  border: 1px solid rgba(234, 221, 227, 0.9);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(420px 210px at 18% 8%, rgba(243, 217, 223, 0.9), transparent 70%),
+    radial-gradient(360px 190px at 90% 90%, rgba(233, 223, 242, 0.9), transparent 70%),
+    var(--surface);
+  overflow: hidden;
+}
+
+.welcome__mascot::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 1px dashed rgba(184, 50, 91, 0.16);
+  border-radius: calc(var(--radius-lg) - 8px);
+  pointer-events: none;
+}
+
+.welcome__mascot .mascot-art {
+  position: relative;
+  z-index: 1;
+  width: min(58vw, 210px);
+  height: auto;
+  margin-bottom: -6px;
+}
+
+.welcome__tag {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  z-index: 2;
+  max-width: 18ch;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--berry);
+}
+
+.welcome__actions {
+  display: grid;
+  gap: 10px;
+}
+
+.link-button {
+  justify-self: center;
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--plum);
+}
+
+.welcome__trust {
+  margin: -4px 0 0;
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+@media (min-width: 480px) {
+  .welcome {
+    gap: 24px;
+  }
+
+  .welcome__mascot {
+    min-height: 178px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .welcome {
+    gap: 26px;
+  }
+
+  .welcome__mascot {
+    min-height: 200px;
+  }
+}
