@@ -7,8 +7,11 @@ import { VisitorLayout } from './components/VisitorLayout';
 import { ColorPage } from './pages/ColorPage';
 import { CreationPage } from './pages/CreationPage';
 import { FoamPage } from './pages/FoamPage';
+import { MissionPage } from './pages/MissionPage';
+import { RewardPage } from './pages/RewardPage';
 import { ScentPage } from './pages/ScentPage';
 import { ShapePage } from './pages/ShapePage';
+import { ThanksPage } from './pages/ThanksPage';
 import { WelcomePage } from './pages/WelcomePage';
 import { canAccessStep, resumePath } from './domain/flow';
 import type { FlowStep } from './domain/flow';
@@ -43,6 +46,9 @@ function VisitorPage({ route }: { route: string }) {
   if (route === '/crear/color') return <ColorPage />;
   if (route === '/crear/aroma') return <ScentPage />;
   if (route === '/crear/creacion') return <CreationPage />;
+  if (route === '/mision') return <MissionPage />;
+  if (route === '/premio') return <RewardPage />;
+  if (route === '/gracias') return <ThanksPage />;
   return <RoutePlaceholder path={route} />;
 }
 
