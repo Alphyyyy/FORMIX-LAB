@@ -4,5 +4,9 @@ import { useFormix } from './FormixProvider';
 
 export function useSound(): { play: (kind: SoundKind) => void } {
   const { soundEnabled } = useFormix();
-  return { play: (kind: SoundKind) => playSound(kind, soundEnabled) };
+  return {
+    play: (kind: SoundKind) => {
+      if (soundEnabled) playSound(kind, true);
+    },
+  };
 }

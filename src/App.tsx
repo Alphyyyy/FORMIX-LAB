@@ -4,6 +4,8 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { SoundToggle } from './components/SoundToggle';
 import { StaffLayout } from './components/StaffLayout';
 import { VisitorLayout } from './components/VisitorLayout';
+import { FoamPage } from './pages/FoamPage';
+import { ShapePage } from './pages/ShapePage';
 import { WelcomePage } from './pages/WelcomePage';
 import { canAccessStep, resumePath } from './domain/flow';
 import type { FlowStep } from './domain/flow';
@@ -30,6 +32,12 @@ function RoutePlaceholder({ path }: { path: string }) {
       <p className="lede">{path}</p>
     </section>
   );
+}
+
+function VisitorPage({ route }: { route: string }) {
+  if (route === '/crear/espuma') return <FoamPage />;
+  if (route === '/crear/molde') return <ShapePage />;
+  return <RoutePlaceholder path={route} />;
 }
 
 function VisitorRoute({ step, children }: { step: FlowStep; children: ReactNode }) {
@@ -68,7 +76,7 @@ function AppShell() {
     return (
       <VisitorLayout headerAction={<SoundToggle />}>
         <VisitorRoute step={VISITOR_STEPS[route]}>
-          <RoutePlaceholder path={route} />
+          <VisitorPage route={route} />
         </VisitorRoute>
       </VisitorLayout>
     );
