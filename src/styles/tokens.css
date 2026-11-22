@@ -1,0 +1,28 @@
+:root {
+  --cream: #fbf7f2;
+  --surface: #fffdfb;
+  --surface-2: #f7eee9;
+  --ink: #2e1b2a;
+  --ink-soft: #6f5a68;
+  --plum: #4a2450;
+  --berry: #b8325b;
+  --rose: #d96c8a;
+  --rose-soft: #f3d9df;
+  --lavender: #e9dff2;
+  --sage: #7e9b86;
+  --line: #eadde3;
+  --amber: #b7791f;
+  --amber-soft: #fbf0dd;
+  --success: #3e7a5e;
+  --danger: #a63d3d;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(46, 27, 42, 0.05), 0 8px 24px rgba(46, 27, 42, 0.05);
+  --shadow-lg: 0 24px 60px rgba(46, 27, 42, 0.12);
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-ui: 'Manrope Variable', system-ui, sans-serif;
+  --maxw: 560px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}

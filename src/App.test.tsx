@@ -5,7 +5,7 @@ import { saveCurrentSessionId, saveData } from './state/storage';
 
 test('renders the FORMIX LAB brand', () => {
   render(<App />);
-  expect(screen.getByRole('heading', { name: /formix lab/i })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'FORMIX LAB' })).toBeInTheDocument();
 });
 
 test('resumes a partially filled session from a deep link', async () => {

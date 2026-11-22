@@ -1,19 +1,66 @@
+@import './tokens.css';
+@import './app.css';
+@import './visitor.css';
+@import './staff.css';
+
 * {
   box-sizing: border-box;
 }
 
-html,
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
   min-height: 100%;
-}
-
-body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #fbf7f2;
-  color: #2e1b2a;
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background:
+    radial-gradient(900px 600px at 8% -10%, #f7dce2 0%, transparent 62%),
+    radial-gradient(720px 520px at 100% 18%, #ede4f7 0%, transparent 58%),
+    var(--cream);
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  min-height: 100vh;
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: var(--rose-soft);
+  color: var(--plum);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(184, 50, 91, 0.45);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

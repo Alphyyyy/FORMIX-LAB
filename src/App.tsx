@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { StaffLayout } from './components/StaffLayout';
+import { VisitorLayout } from './components/VisitorLayout';
 import { canAccessStep, resumePath } from './domain/flow';
 import type { FlowStep } from './domain/flow';
 import { FormixProvider, useFormix } from './state/FormixProvider';
@@ -20,10 +22,10 @@ const STAFF_ROUTES = ['/equipo', '/operador', '/admin', '/admin/sesiones', '/adm
 
 function RoutePlaceholder({ path }: { path: string }) {
   return (
-    <main>
-      <h1>FORMIX LAB</h1>
-      <p>{path}</p>
-    </main>
+    <section>
+      <h1 className="display">FORMIX LAB</h1>
+      <p className="lede">{path}</p>
+    </section>
   );
 }
 
@@ -43,20 +45,30 @@ function VisitorRoute({ step, children }: { step: FlowStep; children: ReactNode 
 function AppShell() {
   const route = useHashRoute();
 
-  if (VISITOR_STEPS[route]) {
+  if (STAFF_ROUTES.includes(route)) {
     return (
-      <VisitorRoute step={VISITOR_STEPS[route]}>
+      <StaffLayout title="Equipo FORMIX">
         <RoutePlaceholder path={route} />
-      </VisitorRoute>
+      </StaffLayout>
     );
   }
 
-  if (STAFF_ROUTES.includes(route)) {
-    return <RoutePlaceholder path={route} />;
+  if (route === '/') {
+    return (
+      <VisitorLayout>
+        <RoutePlaceholder path={route} />
+      </VisitorLayout>
+    );
   }
 
-  if (route === '/') {
-    return <RoutePlaceholder path={route} />;
+  if (VISITOR_STEPS[route]) {
+    return (
+      <VisitorLayout>
+        <VisitorRoute step={VISITOR_STEPS[route]}>
+          <RoutePlaceholder path={route} />
+        </VisitorRoute>
+      </VisitorLayout>
+    );
   }
 
   return (
@@ -70,7 +82,6 @@ function AppShell() {
 export default function App() {
   return (
     <FormixProvider>
-      <div aria-hidden="true" className="bubble-field" />
       <div role="status" hidden className="offline-placeholder" />
       <AppShell />
     </FormixProvider>
