@@ -118,7 +118,7 @@ export function findSessionByCode(data: AppData, raw: string): Session | undefin
 }
 
 function cleanInitials(raw: string): string {
-  const trimmed = raw.trim().slice(0, MAX_INITIALS);
+  const trimmed = raw.trim().slice(0, MAX_INITIALS).toUpperCase();
   return trimmed || DEFAULT_OPERATOR;
 }
 

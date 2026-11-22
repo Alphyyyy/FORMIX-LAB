@@ -139,7 +139,7 @@ test('first game issues greeting on a loss and photo on a win', () => {
   expect(lost.ok).toBe(true);
   if (!lost.ok) return;
   expect(lost.value.reward?.type).toBe('greeting');
-  expect(lost.value.games.bacteria?.operatorInitials).toBe('am');
+  expect(lost.value.games.bacteria?.operatorInitials).toBe('AM');
 
   const won = validateGame(done.data, done.value.code!, 'bacteria', 'WIN', '  AM  ');
   expect(won.ok).toBe(true);
