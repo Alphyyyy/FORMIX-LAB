@@ -5,6 +5,7 @@ import { SoundToggle } from './components/SoundToggle';
 import { StaffLayout } from './components/StaffLayout';
 import { VisitorLayout } from './components/VisitorLayout';
 import { ColorPage } from './pages/ColorPage';
+import { CreationPage } from './pages/CreationPage';
 import { FoamPage } from './pages/FoamPage';
 import { ScentPage } from './pages/ScentPage';
 import { ShapePage } from './pages/ShapePage';
@@ -41,6 +42,7 @@ function VisitorPage({ route }: { route: string }) {
   if (route === '/crear/molde') return <ShapePage />;
   if (route === '/crear/color') return <ColorPage />;
   if (route === '/crear/aroma') return <ScentPage />;
+  if (route === '/crear/creacion') return <CreationPage />;
   return <RoutePlaceholder path={route} />;
 }
 
