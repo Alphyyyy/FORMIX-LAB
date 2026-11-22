@@ -57,6 +57,9 @@
 }
 
 .visitor-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   text-decoration: none;
   color: var(--ink-soft);
 }
@@ -243,7 +246,11 @@
 }
 
 .link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   justify-self: center;
+  min-height: 44px;
   padding: 6px 2px;
   border: 0;
   background: none;
@@ -772,7 +779,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 13px;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);

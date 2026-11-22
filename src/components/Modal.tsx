@@ -10,15 +10,21 @@ interface ModalProps {
 
 export function Modal({ open, onClose, title, children }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
+    if (open && !dialog.open) {
+      previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      dialog.showModal();
+    }
+    if (!open && dialog.open) {
+      dialog.close();
+      previousFocus.current?.focus();
+      previousFocus.current = null;
+    }
   }, [open]);
-
-  if (!open) return null;
 
   return (
     <dialog

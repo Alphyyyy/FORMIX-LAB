@@ -1,4 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { makeData } from '../test/fixtures';
 import { renderWithFormix } from '../test/render';
@@ -26,6 +27,32 @@ test('Modal shows its content and closes from the close button', async () => {
     </Modal>,
   );
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+test('Modal returns focus to the trigger after closing', async () => {
+  const user = userEvent.setup();
+
+  function Harness() {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <button type="button" onClick={() => setOpen(true)}>
+          Abrir aviso
+        </button>
+        <Modal open={open} title="Aviso" onClose={() => setOpen(false)}>
+          <p>Contenido</p>
+        </Modal>
+      </>
+    );
+  }
+
+  render(<Harness />);
+  const trigger = screen.getByRole('button', { name: 'Abrir aviso' });
+  await user.click(trigger);
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Cerrar' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
 });
 
 test('PrivacyDialog carries the approved notice and consent version', () => {
