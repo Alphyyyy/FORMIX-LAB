@@ -1,6 +1,7 @@
 import { generateCode, normalizeCode } from '../domain/code';
-import { CONSENT_VERSION } from '../domain/constants';
-import type { AppData, Preferences, Session } from '../domain/types';
+import { CONSENT_VERSION, DEFAULT_OPERATOR, MAX_INITIALS } from '../domain/constants';
+import { rewardFor, rewardRank } from '../domain/rewards';
+import type { AppData, GameResultValue, GameType, Preferences, Session } from '../domain/types';
 
 export type RepoError =
   | 'not-found'
@@ -114,4 +115,80 @@ export function findSessionByCode(data: AppData, raw: string): Session | undefin
   const code = normalizeCode(raw);
   if (!code) return undefined;
   return data.sessions.find((session) => session.code === code);
+}
+
+function cleanInitials(raw: string): string {
+  const trimmed = raw.trim().slice(0, MAX_INITIALS);
+  return trimmed || DEFAULT_OPERATOR;
+}
+
+export function validateGame(
+  data: AppData,
+  rawCode: string,
+  gameType: GameType,
+  result: GameResultValue,
+  initials: string,
+  now: Date = new Date(),
+): RepoResult<Session> {
+  const session = findSessionByCode(data, rawCode);
+  if (!session) return { ok: false, error: 'not-found' };
+  if (session.games[gameType]) return { ok: false, error: 'already-validated' };
+
+  const games = {
+    ...session.games,
+    [gameType]: {
+      gameType,
+      result,
+      validatedAt: now.toISOString(),
+      operatorInitials: cleanInitials(initials),
+    },
+  };
+  const nextType = rewardFor(games);
+  if (!nextType) return { ok: false, error: 'not-found' };
+
+  let reward = session.reward;
+  let notice: 'reward-locked' | undefined;
+  if (!reward) {
+    reward = {
+      type: nextType,
+      issuedAt: now.toISOString(),
+      redeemedAt: null,
+      redeemedBy: null,
+    };
+  } else if (reward.redeemedAt) {
+    if (rewardRank(nextType) > rewardRank(reward.type)) notice = 'reward-locked';
+  } else if (rewardRank(nextType) > rewardRank(reward.type)) {
+    reward = { ...reward, type: nextType };
+  }
+
+  const updated: Session = { ...session, games, reward };
+  const response: RepoResult<Session> = {
+    ok: true,
+    data: replaceSession(data, updated),
+    value: updated,
+  };
+  if (notice) response.notice = notice;
+  return response;
+}
+
+export function redeemReward(
+  data: AppData,
+  rawCode: string,
+  initials: string,
+  now: Date = new Date(),
+): RepoResult<Session> {
+  const session = findSessionByCode(data, rawCode);
+  if (!session) return { ok: false, error: 'not-found' };
+  if (!session.reward) return { ok: false, error: 'no-reward' };
+  if (session.reward.redeemedAt) return { ok: false, error: 'already-redeemed' };
+
+  const updated: Session = {
+    ...session,
+    reward: {
+      ...session.reward,
+      redeemedAt: now.toISOString(),
+      redeemedBy: cleanInitials(initials),
+    },
+  };
+  return { ok: true, data: replaceSession(data, updated), value: updated };
 }

@@ -4,8 +4,10 @@ import {
   createEmptyData,
   findSessionByCode,
   markFoamDone,
+  redeemReward,
   startSession,
   updatePreferences,
+  validateGame,
 } from './repository';
 
 function startTestSession(now?: Date) {
@@ -100,4 +102,116 @@ test('markFoamDone leaves a completed session unchanged', () => {
   if (!done.ok) throw new Error('setup failed');
 
   expect(markFoamDone(done.data, session.id)).toEqual(done.data);
+});
+
+function completedWithCode() {
+  const started = startSession(createEmptyData());
+  if (!started.ok) throw new Error('start failed');
+  const saved = updatePreferences(started.data, started.value.id, {
+    shapeId: 'shape-patita',
+    colorId: 'color-rosa',
+    scentId: 'scent-fresa',
+  });
+  if (!saved.ok) throw new Error('setup failed');
+  const done = completeSession(saved.data, started.value.id);
+  if (!done.ok) throw new Error('setup failed');
+  return done;
+}
+
+test('rejects unknown codes and sessions without a code', () => {
+  const done = completedWithCode();
+  expect(validateGame(done.data, 'FX-NOPE23', 'bacteria', 'WIN', 'AM')).toEqual({
+    ok: false,
+    error: 'not-found',
+  });
+
+  const started = startSession(createEmptyData());
+  if (!started.ok) throw new Error('start failed');
+  expect(validateGame(started.data, 'FX-ABC234', 'bacteria', 'WIN', 'AM')).toEqual({
+    ok: false,
+    error: 'not-found',
+  });
+});
+
+test('first game issues greeting on a loss and photo on a win', () => {
+  const done = completedWithCode();
+  const lost = validateGame(done.data, done.value.code!, 'bacteria', 'LOSE', 'am');
+  expect(lost.ok).toBe(true);
+  if (!lost.ok) return;
+  expect(lost.value.reward?.type).toBe('greeting');
+  expect(lost.value.games.bacteria?.operatorInitials).toBe('am');
+
+  const won = validateGame(done.data, done.value.code!, 'bacteria', 'WIN', '  AM  ');
+  expect(won.ok).toBe(true);
+  if (!won.ok) return;
+  expect(won.value.reward?.type).toBe('photo');
+  expect(won.value.games.bacteria?.operatorInitials).toBe('AM');
+});
+
+test('upgrades the same reward in place until redemption', () => {
+  const done = completedWithCode();
+  const first = validateGame(done.data, done.value.code!, 'bacteria', 'WIN', 'AM');
+  if (!first.ok) throw new Error('setup failed');
+  const issuedAt = first.value.reward?.issuedAt;
+
+  const second = validateGame(first.data, done.value.code!, 'aroma', 'WIN', 'JP');
+  expect(second.ok).toBe(true);
+  if (!second.ok) return;
+  expect(second.value.reward?.type).toBe('photo_dance');
+  expect(second.value.reward?.issuedAt).toBe(issuedAt);
+});
+
+test('rejects duplicate game validation without changing the reward', () => {
+  const done = completedWithCode();
+  const first = validateGame(done.data, done.value.code!, 'bacteria', 'WIN', 'AM');
+  if (!first.ok) throw new Error('setup failed');
+  const duplicate = validateGame(first.data, done.value.code!, 'bacteria', 'LOSE', 'JP');
+  expect(duplicate).toEqual({ ok: false, error: 'already-validated' });
+  expect(first.data.sessions[0].games.bacteria?.result).toBe('WIN');
+});
+
+test('second game after redemption is recorded but cannot upgrade the reward', () => {
+  const done = completedWithCode();
+  const first = validateGame(done.data, done.value.code!, 'bacteria', 'WIN', 'AM');
+  if (!first.ok) throw new Error('setup failed');
+  const redeemed = redeemReward(first.data, done.value.code!, 'AM');
+  if (!redeemed.ok) throw new Error('setup failed');
+  const redeemedAt = redeemed.value.reward?.redeemedAt;
+
+  const second = validateGame(redeemed.data, done.value.code!, 'aroma', 'WIN', 'JP');
+  expect(second.ok).toBe(true);
+  if (!second.ok) return;
+  expect(second.notice).toBe('reward-locked');
+  expect(second.value.reward?.type).toBe('photo');
+  expect(second.value.reward?.redeemedAt).toBe(redeemedAt);
+  expect(second.value.games.aroma?.result).toBe('WIN');
+});
+
+test('redeems only an issued reward and only once', () => {
+  const done = completedWithCode();
+  expect(redeemReward(done.data, done.value.code!, 'AM')).toEqual({ ok: false, error: 'no-reward' });
+
+  const first = validateGame(done.data, done.value.code!, 'bacteria', 'WIN', 'AM');
+  if (!first.ok) throw new Error('setup failed');
+  const redeemed = redeemReward(first.data, done.value.code!, '  JP  ');
+  expect(redeemed.ok).toBe(true);
+  if (!redeemed.ok) return;
+  expect(redeemed.value.reward?.redeemedBy).toBe('JP');
+  expect(redeemed.value.reward?.redeemedAt).toBeTruthy();
+
+  expect(redeemReward(redeemed.data, done.value.code!, 'AM')).toEqual({
+    ok: false,
+    error: 'already-redeemed',
+  });
+});
+
+test('cleans operator initials and applies the default and maximum length', () => {
+  const done = completedWithCode();
+  const blank = validateGame(done.data, done.value.code!, 'bacteria', 'WIN', '   ');
+  if (!blank.ok) throw new Error('setup failed');
+  expect(blank.value.games.bacteria?.operatorInitials).toBe('Operador');
+
+  const long = validateGame(done.data, done.value.code!, 'aroma', 'WIN', '  ABCDEFGHIJKLMNOP  ');
+  if (!long.ok) throw new Error('setup failed');
+  expect(long.value.games.aroma?.operatorInitials).toBe('ABCDEFGHIJKL');
 });
