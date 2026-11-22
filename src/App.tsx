@@ -4,7 +4,9 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { SoundToggle } from './components/SoundToggle';
 import { StaffLayout } from './components/StaffLayout';
 import { VisitorLayout } from './components/VisitorLayout';
+import { ColorPage } from './pages/ColorPage';
 import { FoamPage } from './pages/FoamPage';
+import { ScentPage } from './pages/ScentPage';
 import { ShapePage } from './pages/ShapePage';
 import { WelcomePage } from './pages/WelcomePage';
 import { canAccessStep, resumePath } from './domain/flow';
@@ -37,6 +39,8 @@ function RoutePlaceholder({ path }: { path: string }) {
 function VisitorPage({ route }: { route: string }) {
   if (route === '/crear/espuma') return <FoamPage />;
   if (route === '/crear/molde') return <ShapePage />;
+  if (route === '/crear/color') return <ColorPage />;
+  if (route === '/crear/aroma') return <ScentPage />;
   return <RoutePlaceholder path={route} />;
 }
 

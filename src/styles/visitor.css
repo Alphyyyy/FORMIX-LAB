@@ -530,6 +530,184 @@
   }
 }
 
+.selection-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 190px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(320px 220px at 50% 0%, rgba(243, 217, 223, 0.8), transparent 72%),
+    var(--surface);
+}
+
+.selection-preview .soap-art {
+  width: min(48vw, 178px);
+  height: auto;
+}
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.swatch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 104px;
+  padding: 10px 6px 9px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 180ms var(--ease),
+    border-color 180ms var(--ease),
+    transform 180ms var(--ease);
+}
+
+.swatch:hover {
+  background: rgba(255, 253, 251, 0.8);
+  transform: translateY(-1px);
+}
+
+.swatch--selected {
+  border-color: var(--berry);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px rgba(184, 50, 91, 0.1);
+}
+
+.swatch__dot {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 -6px 12px rgba(46, 27, 42, 0.14),
+    0 8px 16px rgba(46, 27, 42, 0.12);
+}
+
+.swatch__name {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.swatch__check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: none;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--berry);
+  color: var(--cream);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.swatch--selected .swatch__check {
+  display: inline-flex;
+}
+
+.scent-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.scent-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 253, 251, 0.82);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms var(--ease),
+    border-color 180ms var(--ease),
+    background 180ms var(--ease);
+}
+
+.scent-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(217, 108, 138, 0.55);
+}
+
+.scent-card--selected {
+  border-color: var(--berry);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px rgba(184, 50, 91, 0.1);
+}
+
+.scent-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--rose-soft);
+  color: var(--berry);
+}
+
+.scent-card__text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.scent-card__top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.scent-card__name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--plum);
+}
+
+.scent-card__notes {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.scent-card__check {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--berry);
+  color: var(--cream);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.scent-card--selected .scent-card__check {
+  display: inline-flex;
+}
+
 @media (min-width: 480px) {
   .choice-card {
     min-height: 186px;
