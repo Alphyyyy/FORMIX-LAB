@@ -8,9 +8,11 @@ import { ColorPage } from './pages/ColorPage';
 import { CreationPage } from './pages/CreationPage';
 import { FoamPage } from './pages/FoamPage';
 import { MissionPage } from './pages/MissionPage';
+import { OperatorPage } from './pages/OperatorPage';
 import { RewardPage } from './pages/RewardPage';
 import { ScentPage } from './pages/ScentPage';
 import { ShapePage } from './pages/ShapePage';
+import { StaffLoginPage } from './pages/StaffLoginPage';
 import { ThanksPage } from './pages/ThanksPage';
 import { WelcomePage } from './pages/WelcomePage';
 import { canAccessStep, resumePath } from './domain/flow';
@@ -65,13 +67,32 @@ function VisitorRoute({ step, children }: { step: FlowStep; children: ReactNode 
   return <>{children}</>;
 }
 
+function StaffGate({ role, children }: { role: 'operator' | 'admin'; children: ReactNode }) {
+  const { staff } = useFormix();
+  const allowed =
+    Boolean(staff) && (role === 'operator' ? staff?.role === 'operator' || staff?.role === 'admin' : staff?.role === 'admin');
+
+  useEffect(() => {
+    if (!allowed) navigate('/equipo', { replace: true });
+  }, [allowed]);
+
+  if (!allowed) return <p>Redirigiendo al acceso del equipo…</p>;
+  return <>{children}</>;
+}
+
 function AppShell() {
   const route = useHashRoute();
 
   if (STAFF_ROUTES.includes(route)) {
     return (
       <StaffLayout title="Equipo FORMIX">
-        <RoutePlaceholder path={route} />
+        {route === '/equipo' ? <StaffLoginPage /> : null}
+        {route === '/operador' ? (
+          <StaffGate role="operator">
+            <OperatorPage />
+          </StaffGate>
+        ) : null}
+        {route.startsWith('/admin') ? <RoutePlaceholder path={route} /> : null}
       </StaffLayout>
     );
   }
