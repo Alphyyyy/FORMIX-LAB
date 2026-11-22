@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { AdminCatalog } from '../admin/AdminCatalog';
 import { AdminNav } from '../admin/AdminNav';
 import { AdminSessions } from '../admin/AdminSessions';
+import { AdminShare } from '../admin/AdminShare';
 import { AdminSummary } from '../admin/AdminSummary';
 import { ExportPanel } from '../admin/ExportPanel';
 import { useFormix } from '../state/FormixProvider';
@@ -36,11 +38,7 @@ export function AdminPage() {
       <AdminNav />
 
       {isCatalog || isShare ? (
-        <section className="admin-panel">
-          <p className="eyebrow">Próximamente</p>
-          <h2>{isCatalog ? 'Catálogo' : 'Difusión'}</h2>
-          <p className="form-note">Esta sección se habilita en la siguiente tarea.</p>
-        </section>
+        isCatalog ? <AdminCatalog /> : <AdminShare />
       ) : isSessions ? (
         <>
           <AdminSessions includeDemo={includeDemo} />
