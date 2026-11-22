@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { OfflineBanner } from './components/OfflineBanner';
 import { SoundToggle } from './components/SoundToggle';
@@ -32,6 +32,8 @@ const VISITOR_STEPS: Record<string, FlowStep> = {
 };
 
 const STAFF_ROUTES = ['/equipo', '/operador', '/admin', '/admin/sesiones', '/admin/catalogo', '/admin/difusion'];
+
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 function RoutePlaceholder({ path }: { path: string }) {
   return (
@@ -92,7 +94,13 @@ function AppShell() {
             <OperatorPage />
           </StaffGate>
         ) : null}
-        {route.startsWith('/admin') ? <RoutePlaceholder path={route} /> : null}
+        {route.startsWith('/admin') ? (
+          <StaffGate role="admin">
+            <Suspense fallback={<p>Cargando panel…</p>}>
+              <AdminPage />
+            </Suspense>
+          </StaffGate>
+        ) : null}
       </StaffLayout>
     );
   }
