@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { OfflineBanner } from './components/OfflineBanner';
+import { SoundToggle } from './components/SoundToggle';
 import { StaffLayout } from './components/StaffLayout';
 import { VisitorLayout } from './components/VisitorLayout';
 import { canAccessStep, resumePath } from './domain/flow';
@@ -55,7 +57,7 @@ function AppShell() {
 
   if (route === '/') {
     return (
-      <VisitorLayout>
+      <VisitorLayout headerAction={<SoundToggle />}>
         <RoutePlaceholder path={route} />
       </VisitorLayout>
     );
@@ -63,7 +65,7 @@ function AppShell() {
 
   if (VISITOR_STEPS[route]) {
     return (
-      <VisitorLayout>
+      <VisitorLayout headerAction={<SoundToggle />}>
         <VisitorRoute step={VISITOR_STEPS[route]}>
           <RoutePlaceholder path={route} />
         </VisitorRoute>
@@ -82,7 +84,7 @@ function AppShell() {
 export default function App() {
   return (
     <FormixProvider>
-      <div role="status" hidden className="offline-placeholder" />
+      <OfflineBanner />
       <AppShell />
     </FormixProvider>
   );
