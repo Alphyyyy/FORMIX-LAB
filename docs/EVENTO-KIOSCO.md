@@ -66,7 +66,7 @@ Consejo: deja la pestaña del visitante en primer plano entre personas y la del 
 
 ## 7. Contingencia
 
-- Si falla el internet después de cargar la página, el recorrido y los datos locales siguen funcionando; no se sincronizan entre dispositivos.
+- Si falla el internet después de cargar la página, la pestaña abierta sigue funcionando con los datos locales; si se recarga sin red, puede no volver a cargar porque no hay service worker.
 - Si el dispositivo se apaga o se cierra el navegador, vuelve a abrir la misma URL en el mismo navegador para conservar los datos.
 - Si se pierde el estado, usa una hoja de respaldo para anotar códigos, retos y premios.
 - Ten a mano el PIN del equipo en un lugar privado, no visible para el público.
