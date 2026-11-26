@@ -144,6 +144,34 @@ export async function ensureVisitorAuth() {
   return data.session;
 }
 
+async function resetAnonymousAuth() {
+  const auth = client().auth;
+  await auth.signOut();
+  const { data, error } = await auth.signInAnonymously();
+  if (error) throw error;
+  return data.session;
+}
+
+export function isStaleAuthError(error: unknown): boolean {
+  const candidate = error as { code?: string; message?: string; status?: number } | null;
+  const message = candidate?.message ?? '';
+  return (
+    (candidate?.code === '23503' && message.includes('sessions_user_id_fkey')) ||
+    message.includes('not_authenticated') ||
+    (candidate?.status === 401 && message.includes('JWT'))
+  );
+}
+
+async function withVisitorAuthRetry<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (!isStaleAuthError(error)) throw error;
+    await resetAnonymousAuth();
+    return operation();
+  }
+}
+
 async function requireSession() {
   const { data } = await client().auth.getSession();
   if (!data.session) throw new Error('not_authenticated');
@@ -176,34 +204,38 @@ export async function cloudSetCatalogStatus(
 }
 
 export async function cloudStartSession(session: Session): Promise<void> {
-  await ensureVisitorAuth();
-  const { error } = await client().rpc('start_session', {
-    p_id: session.id,
-    p_consent_version: session.consentVersion,
-    p_started_at: session.startedAt,
+  await withVisitorAuthRetry(async () => {
+    await ensureVisitorAuth();
+    const { error } = await client().rpc('start_session', {
+      p_id: session.id,
+      p_consent_version: session.consentVersion,
+      p_started_at: session.startedAt,
+    });
+    if (error) throw error;
   });
-  if (error) throw error;
 }
 
 export async function cloudCompleteSession(session: Session): Promise<Session> {
-  await ensureVisitorAuth();
   if (!session.preferences) throw new Error('incomplete_session');
-  const preferences = session.preferences;
-  const { data, error } = await client().rpc('complete_session', {
-    p_id: session.id,
-    p_consent_version: session.consentVersion,
-    p_started_at: session.startedAt,
-    p_foam_done: session.foamDone,
-    p_shape_id: preferences.shapeId,
-    p_color_id: preferences.colorId,
-    p_scent_id: preferences.scentId,
-    p_purchase_intent: preferences.purchaseIntent,
-    p_gift_intent: preferences.giftIntent,
+  return withVisitorAuthRetry(async () => {
+    await ensureVisitorAuth();
+    const preferences = session.preferences!;
+    const { data, error } = await client().rpc('complete_session', {
+      p_id: session.id,
+      p_consent_version: session.consentVersion,
+      p_started_at: session.startedAt,
+      p_foam_done: session.foamDone,
+      p_shape_id: preferences.shapeId,
+      p_color_id: preferences.colorId,
+      p_scent_id: preferences.scentId,
+      p_purchase_intent: preferences.purchaseIntent,
+      p_gift_intent: preferences.giftIntent,
+    });
+    if (error) throw error;
+    const row = firstRow(data as CloudSessionRow | CloudSessionRow[] | null);
+    if (!row) throw new Error('empty_session_response');
+    return mapCloudSession(row);
   });
-  if (error) throw error;
-  const row = firstRow(data as CloudSessionRow | CloudSessionRow[] | null);
-  if (!row) throw new Error('empty_session_response');
-  return mapCloudSession(row);
 }
 
 export async function cloudFetchSession(sessionId: string): Promise<Session | null> {

@@ -95,6 +95,16 @@ Para que una build use Supabase, deben existir `VITE_SUPABASE_URL` y `VITE_SUPAB
 4. Prueba un recorrido desde `/#/` en otra pestaña o en otro celular de la misma red.
 5. Valida el código desde la tablet/pestaña de operador.
 
+### Limpieza y usuarios anónimos
+
+Para limpiar pruebas, usa **solo**:
+
+```sql
+delete from public.sessions;
+```
+
+No borres `auth.users` antes del evento. Si eliminas usuarios anónimos mientras un teléfono tiene una sesión abierta, su token queda huérfano y el guardado puede fallar con `sessions_user_id_fkey`. La app intenta renovar el usuario y reintentar, pero la limpieza segura es borrar sesiones, no identidades, hasta que termine el evento.
+
 ## Seguridad
 
 - Los visitantes usan `signInAnonymously()`; no se les pide correo.

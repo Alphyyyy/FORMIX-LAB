@@ -126,6 +126,8 @@ En modo nube, para limpiar datos de prueba usa el SQL Editor de Supabase:
 delete from public.sessions;
 ```
 
+**No borres `auth.users` antes del evento.** Si eliminas los usuarios anónimos mientras un teléfono tiene la sesión abierta, ese teléfono conserva un token huérfano y puede fallar con `sessions_user_id_fkey`. La app intenta renovar el usuario y reintentar, pero lo seguro es borrar solo las sesiones. Si necesitas limpiar usuarios anónimos, hazlo después del evento y pide a los dispositivos que borren los datos del sitio.
+
 Para un reinicio local total desde la consola del navegador:
 
 ```js

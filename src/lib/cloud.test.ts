@@ -1,4 +1,4 @@
-import { mapCloudCatalog, mapCloudSession } from './cloud';
+import { isStaleAuthError, mapCloudCatalog, mapCloudSession } from './cloud';
 
 test('maps a cloud session into the local domain model', () => {
   const session = mapCloudSession({
@@ -66,4 +66,16 @@ test('maps cloud catalog rows into catalog items', () => {
     sortOrder: 1,
     createdAt: '2026-11-26T10:00:00.000Z',
   });
+});
+
+test('detects a session owned by a deleted anonymous user', () => {
+  expect(
+    isStaleAuthError({
+      code: '23503',
+      message:
+        'insert or update on table "sessions" violates foreign key constraint "sessions_user_id_fkey"',
+    }),
+  ).toBe(true);
+  expect(isStaleAuthError({ message: 'not_authenticated' })).toBe(true);
+  expect(isStaleAuthError({ code: '23505', message: 'duplicate key' })).toBe(false);
 });
