@@ -1,8 +1,8 @@
 # FORMIX LAB — Prototipo navegable
 
-Prototipo web mobile-first para la feria de FORMIX: un configurador de jabones con minijuego, captura anónima de preferencias, código de participación, validación por operador, premios y panel administrativo con exportación CSV.
+Prototipo web mobile-first para la feria de FORMIX: un configurador de jabones con minijuego, captura anónima de preferencias, código de participación, validación por operador, premios y panel administrativo con exportación CSV. Funciona en **modo local** o conectado a **Supabase** para que los visitantes usen su propio celular.
 
-> **Estado:** prototipo funcional de demostración. No es una tienda, no procesa pagos y no sustituye el backend de producción. Los datos viven en el navegador.
+> **Estado:** prototipo funcional. La versión publicada usa Supabase si están configuradas `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`; sin ellas funciona en modo local de demostración.
 
 ## Qué incluye
 
@@ -41,7 +41,9 @@ Abre `http://localhost:5173`.
 
 ## Acceso del equipo
 
-Los PIN no se muestran en la página. El responsable de FORMIX entrega el PIN al operador y al administrador. En este prototipo el acceso es una simulación local; no es seguridad real.
+Con Supabase, el equipo entra con las cuentas creadas en **Authentication → Users**: correo y contraseña. No hay PINs visibles.
+
+En modo local (sin variables de Supabase), el acceso usa los PIN de demostración que se entregan en privado.
 
 El acceso está en `/#/equipo` o desde el enlace “Equipo FORMIX” del pie.
 
@@ -77,7 +79,18 @@ El acceso está en `/#/equipo` o desde el enlace “Equipo FORMIX” del pie.
 8. En **Catálogo**, cambia un aroma a **Inactivo** y comprueba que desaparece del flujo.
 9. En **Difusión**, usa **Preparar feria** para retirar los datos de ejemplo.
 
-**Limitación importante:** la sincronización funciona entre pestañas del mismo navegador. Un celular y una tablet no comparten `localStorage`; para la feria real hace falta el backend de producción.
+**Limitación importante:** en modo local la sincronización funciona entre pestañas del mismo navegador. En modo nube, el visitante puede usar su celular y el operador su tablet.
+
+## Modo nube con Supabase
+
+1. El visitante abre la URL desplegada y escanea el QR desde su celular.
+2. Completa el recorrido y guarda la combinación. El código se genera en el servidor.
+3. El operador entra en `/#/equipo` desde la tablet con su cuenta de FORMIX.
+4. Busca el código, valida los retos y marca el premio.
+5. El celular del visitante actualiza el premio en unos segundos.
+6. El administrador ve todas las sesiones y exporta los CSV.
+
+La puesta en marcha del proyecto de Supabase está en [Configuración de Supabase](docs/SUPABASE-SETUP.md).
 
 ## Probar en el celular
 
@@ -91,20 +104,29 @@ Abre en el celular la URL “Network” que imprime Vite (por ejemplo `http://19
 
 ## Datos y reinicio
 
-Las claves versionadas son:
+En modo nube, las sesiones viven en Supabase. `localStorage` solo conserva el identificador de la sesión en curso, el sonido y la sesión de equipo. En modo local, todo vive en el navegador.
 
-- `formix.data.v1` — sesiones, preferencias, juegos, premios y overrides de catálogo.
+Claves locales:
+
+- `formix.data.v1` — sesiones locales, preferencias, juegos, premios y overrides de catálogo.
 - `formix.currentSession.v1` — sesión en curso.
 - `formix.sound.v1` — preferencia de sonido.
-- `formix.staff.v1` — sesión del equipo (en `sessionStorage`).
+- `formix.staff.v1` — sesión del equipo en modo local (en `sessionStorage`).
+- `sb-...-auth-token` — sesión de Supabase Auth.
 
-Acciones disponibles en **Difusión**:
+Acciones de demostración locales en **Difusión**:
 
 - **Preparar feria:** elimina las sesiones de ejemplo y conserva las reales.
 - **Restablecer demo:** vuelve a sembrar las 18 sesiones de ejemplo conservando las reales.
 - **Borrar todas las sesiones:** vacía todo, incluidas las reales; exige escribir `BORRAR`.
 
-Para un reinicio total desde la consola del navegador:
+En modo nube, para limpiar datos de prueba usa el SQL Editor de Supabase:
+
+```sql
+delete from public.sessions;
+```
+
+Para un reinicio local total desde la consola del navegador:
 
 ```js
 localStorage.clear();
@@ -118,11 +140,20 @@ location.reload();
 npm run build
 ```
 
+Para que la build use Supabase, el comando necesita `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en el entorno o en `.env.local`. Sin ellas se genera el modo local de demostración.
+
 Publica la carpeta `dist/` en Netlify, Vercel, GitHub Pages o cualquier hosting estático. El proyecto usa `base: './'` y rutas con hash, así que no necesita reglas de rewrite.
 
 ### GitHub Pages
 
 El repositorio incluye `.github/workflows/deploy.yml`: en cada push a `main` ejecuta pruebas, compila y publica `dist/`.
+
+Antes del despliegue, configura los secretos **Settings → Secrets and variables → Actions**:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+El workflow comprueba que existan y falla con un mensaje claro si faltan.
 
 **GitHub Actions no puede crear el sitio de Pages por sí solo.** Hay que habilitarlo una vez en el repositorio:
 
@@ -142,9 +173,14 @@ Errores frecuentes:
 
 ## Para el evento
 
-Si el evento es temporal y no hay backend, la opción recomendada es **modo kiosco**: un solo tablet o laptop en el puesto, con dos pestañas del mismo navegador (visitante y operador). Un QR abierto en teléfonos personales no sincroniza con el operador.
+Con Supabase, el evento recomendado es: cada visitante abre el QR en su celular y el operador valida desde una tablet. El celular actualiza el premio en unos segundos.
 
-Lee la guía práctica: [Evento en modo kiosco](docs/EVENTO-KIOSCO.md).
+Si no hay backend o falla la conexión, el modo local permite un puesto tipo kiosco con un solo tablet y dos pestañas. Es una contingencia, no el flujo principal.
+
+Guías:
+
+- [Configuración de Supabase](docs/SUPABASE-SETUP.md).
+- [Evento en modo kiosco](docs/EVENTO-KIOSCO.md) — solo para el modo local.
 
 ## Personalización
 
@@ -166,20 +202,23 @@ src/
   components/   Marca, botones, layout, modal, sonido, SVG
   data/         Catálogo, colores y datos de ejemplo
   domain/       Tipos, códigos, premios, métricas, CSV, flow guards
-  lib/          Audio y descargas
+  lib/          Audio, descargas, Supabase y capa de nube
   pages/        Pantallas del visitante y del equipo
-  state/        Provider, repositorio, storage, router
+  state/        Provider, repositorio local, storage, router
   styles/       Tokens y estilos
   test/         Setup, fixtures y helper de render
+supabase/       Migración SQL y asignación de roles
 ```
 
 ## Limitaciones declaradas
 
-- Sin backend ni autenticación real; el canje único se garantiza solo dentro de un navegador.
-- Sin sincronización entre dispositivos.
-- La primera carga requiere internet; no hay service worker.
+- En modo nube, el canje único y la validación se controlan en Supabase; en modo local se simulan en el navegador.
+- En modo nube los visitantes necesitan internet; no hay cola offline.
+- En modo local la sincronización solo funciona entre pestañas del mismo navegador.
+- La primera carga requiere internet.
 - Catálogo, fotografías, mascota y jingle son provisionales.
-- El acceso del equipo es una simulación local, no seguridad real.
+- En modo local el acceso del equipo es una simulación con PIN; en modo nube usa Supabase Auth.
+- Los datos de la nube deben borrarse después del evento según la política de privacidad acordada.
 
 ## Documentación
 

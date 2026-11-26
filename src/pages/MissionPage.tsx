@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/Button';
 import { Soap } from '../components/Soap';
 import { rewardDescription, rewardLabel } from '../domain/rewards';
@@ -44,11 +44,20 @@ function ChallengeIcon({ type }: { type: GameType }) {
 }
 
 export function MissionPage() {
-  const { currentSession } = useFormix();
+  const { currentSession, refreshCurrentSession, isCloud } = useFormix();
   const [copyMessage, setCopyMessage] = useState('');
   const code = currentSession?.code ?? '—';
   const reward = currentSession?.reward;
   const games = currentSession?.games ?? {};
+
+  useEffect(() => {
+    if (!isCloud) return;
+    void refreshCurrentSession();
+    const timer = window.setInterval(() => {
+      void refreshCurrentSession();
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [isCloud, refreshCurrentSession]);
 
   const copy = async () => {
     try {

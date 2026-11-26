@@ -1,5 +1,7 @@
 # Evento en modo kiosco
 
+> **Esta guía aplica al modo local, sin Supabase.** Si ya conectaste Supabase, el flujo recomendado es que cada visitante use su celular y el operador valide desde una tablet; el modo kiosco queda como contingencia.
+
 Guía práctica para usar FORMIX LAB en un evento temporal con un solo dispositivo, sin backend y sin sincronización entre celulares.
 
 ## 1. Decisión importante: un solo dispositivo

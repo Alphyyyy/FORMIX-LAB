@@ -2,9 +2,9 @@
 
 Esta guía explica cómo abrir, probar y preparar el prototipo de **FORMIX LAB** sin conocimientos técnicos profundos. Para el detalle técnico, consulta el [README](../README.md) y el [camino a producción](PRODUCCION.md).
 
-> **Para el evento temporal:** usa un solo dispositivo como kiosco. La sincronización entre visitante y operador solo funciona entre pestañas del mismo navegador. Si el visitante usa su propio celular, el operador no podrá validar su código ni entregar el premio digital. La guía práctica está en [Evento en modo kiosco](EVENTO-KIOSCO.md).
+> **Para el evento con Supabase:** cada visitante puede usar su propio celular y el operador valida desde una tablet. Si no hay backend, el modo local permite usar un solo dispositivo tipo kiosco. La guía de kiosco está en [Evento en modo kiosco](EVENTO-KIOSCO.md).
 
-Los PIN de operador y administrador no aparecen en la web: te los entrega la persona responsable de FORMIX.
+Con Supabase, el equipo entra con correo y contraseña. En modo local se usa un PIN privado; no aparece en la pantalla.
 
 ## 1. Qué tienes en la mano
 
@@ -55,19 +55,19 @@ La experiencia está pensada para durar unos 3–4 minutos.
 ## 4. Probar el modo operador
 
 1. Abre otra pestaña en `/#/equipo`.
-2. Pulsa **Operador**, escribe el PIN que te entregue el responsable y entra.
+2. Entra con tu cuenta de FORMIX (correo y contraseña). En modo local, usa el PIN privado.
 3. Pega el código del visitante y pulsa **Buscar**.
 4. Pulsa **Ganó** o **No ganó** en cada reto. Confirma la acción.
 5. El premio se emite al validar el primer reto. Al validar el segundo, sube de nivel si corresponde.
 6. Pulsa **Marcar premio como entregado**. Solo se puede canjear una vez.
 7. Vuelve a la pestaña del visitante: la pantalla se actualiza sola.
 
-**Importante:** la sincronización es entre pestañas del mismo navegador. En una feria con visitantes en sus propios celulares y una tablet de operador hace falta el backend de producción.
+**Importante:** con Supabase, el visitante puede estar en su celular y el operador en la tablet. En modo local, la sincronización es entre pestañas del mismo navegador.
 
 ## 5. Probar el panel administrativo
 
 1. Abre `/#/equipo`.
-2. Pulsa **Administrador**, escribe el PIN del responsable y entra.
+2. Entra con tu cuenta de administrador (correo y contraseña). En modo local, usa el PIN privado.
 3. **Resumen:** sesiones, finalización, participación, premios y preferencias.
 4. **Sesiones:** tabla con combinaciones, retos, premio y origen (demo/real).
 5. **Catálogo:** cambia el estado de moldes, colores y aromas.

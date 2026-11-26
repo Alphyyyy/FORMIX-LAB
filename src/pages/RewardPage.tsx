@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Button } from '../components/Button';
 import { Mascot } from '../components/Mascot';
 import { rewardDescription, rewardLabel } from '../domain/rewards';
@@ -36,9 +37,18 @@ function formatDate(value: string): string {
 }
 
 export function RewardPage() {
-  const { currentSession } = useFormix();
+  const { currentSession, refreshCurrentSession, isCloud } = useFormix();
   const reward = currentSession?.reward;
   const games = currentSession?.games ?? {};
+
+  useEffect(() => {
+    if (!isCloud) return;
+    void refreshCurrentSession();
+    const timer = window.setInterval(() => {
+      void refreshCurrentSession();
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [isCloud, refreshCurrentSession]);
 
   if (!reward) {
     return (

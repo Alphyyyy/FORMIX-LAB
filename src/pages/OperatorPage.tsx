@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { Soap } from '../components/Soap';
 import { itemName } from '../domain/catalog';
 import { rewardLabel } from '../domain/rewards';
-import { findSessionByCode } from '../state/repository';
 import { useFormix } from '../state/FormixProvider';
 import { navigate } from '../state/useHashRoute';
 import { useSound } from '../state/useSound';
@@ -30,37 +29,50 @@ function resultLabel(result: GameResultValue | undefined): string {
 }
 
 export function OperatorPage() {
-  const { data, catalog, staff, logout, validateGame, redeemReward } = useFormix();
+  const {
+    catalog,
+    staff,
+    logout,
+    validateGame,
+    redeemReward,
+    findSessionByCode,
+    allSessions,
+    refreshAllSessions,
+  } = useFormix();
   const { play } = useSound();
   const [query, setQuery] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [message, setMessage] = useState('');
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
 
-  const session = data.sessions.find((item) => item.id === selectedId) ?? null;
+  useEffect(() => {
+    void refreshAllSessions();
+  }, [refreshAllSessions]);
+
   const recent = useMemo(
     () =>
-      data.sessions
+      allSessions
         .filter((item) => item.state === 'completed' && item.code)
         .sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''))
         .slice(0, 8),
-    [data.sessions],
+    [allSessions],
   );
 
-  const search = (event: FormEvent<HTMLFormElement>) => {
+  const search = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const found = findSessionByCode(data, query);
+    const found = await findSessionByCode(query);
     if (!found) {
-      setSelectedId(null);
+      setSession(null);
       setMessage('No encontramos ese código.');
       return;
     }
-    setSelectedId(found.id);
+    setSession(found);
+    setQuery(found.code ?? query);
     setMessage('');
   };
 
   const openResults = (found: Session) => {
-    setSelectedId(found.id);
+    setSession(found);
     setQuery(found.code ?? '');
     setMessage('');
   };
@@ -69,11 +81,11 @@ export function OperatorPage() {
     setConfirmation({ kind: 'game', gameType, result });
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!confirmation) return;
     if (confirmation.kind === 'game') {
       if (!session?.code) return;
-      const outcome = validateGame(
+      const outcome = await validateGame(
         session.code,
         confirmation.gameType,
         confirmation.result,
@@ -83,26 +95,33 @@ export function OperatorPage() {
         setMessage(
           outcome.error === 'already-validated'
             ? 'Este reto ya fue registrado.'
-            : 'No se pudo registrar el resultado.',
+            : outcome.error === 'remote'
+              ? 'No se pudo conectar con el servidor.'
+              : 'No se pudo registrar el resultado.',
         );
       } else if (outcome.notice === 'reward-locked') {
+        setSession(outcome.value);
         setMessage(
           'El premio ya fue entregado; el resultado quedó registrado, pero no se puede mejorar.',
         );
         play('pop');
       } else {
+        setSession(outcome.value);
         setMessage('Resultado registrado.');
         play('success');
       }
     } else if (session?.code) {
-      const outcome = redeemReward(session.code, staff?.initials ?? 'Operador');
+      const outcome = await redeemReward(session.code, staff?.initials ?? 'Operador');
       if (!outcome.ok) {
         setMessage(
           outcome.error === 'already-redeemed'
             ? 'Este premio ya fue entregado.'
-            : 'No se pudo entregar el premio.',
+            : outcome.error === 'remote'
+              ? 'No se pudo conectar con el servidor.'
+              : 'No se pudo entregar el premio.',
         );
       } else {
+        setSession(outcome.value);
         setMessage('Premio entregado.');
         play('success');
       }

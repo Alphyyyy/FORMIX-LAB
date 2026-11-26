@@ -70,14 +70,15 @@ function VisitorRoute({ step, children }: { step: FlowStep; children: ReactNode 
 }
 
 function StaffGate({ role, children }: { role: 'operator' | 'admin'; children: ReactNode }) {
-  const { staff } = useFormix();
+  const { staff, staffLoading } = useFormix();
   const allowed =
     Boolean(staff) && (role === 'operator' ? staff?.role === 'operator' || staff?.role === 'admin' : staff?.role === 'admin');
 
   useEffect(() => {
-    if (!allowed) navigate('/equipo', { replace: true });
-  }, [allowed]);
+    if (!staffLoading && !allowed) navigate('/equipo', { replace: true });
+  }, [allowed, staffLoading]);
 
+  if (staffLoading) return <p>Comprobando la sesión del equipo…</p>;
   if (!allowed) return <p>Redirigiendo al acceso del equipo…</p>;
   return <>{children}</>;
 }

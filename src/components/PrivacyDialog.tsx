@@ -1,4 +1,5 @@
 import { CONSENT_VERSION } from '../domain/constants';
+import { isCloudMode } from '../lib/supabase';
 import { Modal } from './Modal';
 
 export function PrivacyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -15,9 +16,9 @@ export function PrivacyDialog({ open, onClose }: { open: boolean; onClose: () =>
           premio.
         </p>
         <p>
-          Los datos se almacenan en este dispositivo durante la demostración y se exportan de forma
-          agregada para orientar la producción. No se usan para publicidad ni se comparten con
-          terceros.
+          {isCloudMode
+            ? 'Los datos se guardan en un servidor seguro de FORMIX para analizar las preferencias de la feria. No se usan para publicidad ni se comparten con terceros.'
+            : 'Los datos se almacenan en este dispositivo durante la demostración y se exportan de forma agregada para orientar la producción. No se usan para publicidad ni se comparten con terceros.'}
         </p>
         <p>
           Puedes pedir información al equipo del puesto. Una sesión no identifica necesariamente a

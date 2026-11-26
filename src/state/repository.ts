@@ -10,7 +10,8 @@ export type RepoError =
   | 'not-completed'
   | 'already-validated'
   | 'already-redeemed'
-  | 'no-reward';
+  | 'no-reward'
+  | 'remote';
 
 export type RepoResult<T> =
   | { ok: true; data: AppData; value: T; notice?: 'reward-locked' }

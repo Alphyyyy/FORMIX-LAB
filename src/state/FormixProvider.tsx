@@ -4,17 +4,36 @@ import { BASE_CATALOG } from '../data/catalog';
 import { createSeedData } from '../data/seed';
 import { applyCatalogOverrides } from '../domain/catalog';
 import { ADMIN_PIN, DEFAULT_OPERATOR, MAX_INITIALS, OPERATOR_PIN } from '../domain/constants';
+import {
+  cloudCompleteSession,
+  cloudErrorMessage,
+  cloudFetchAllSessions,
+  cloudFetchCatalog,
+  cloudFetchSession,
+  cloudFindSessionByCode,
+  cloudGetMyStaff,
+  cloudRedeemReward,
+  cloudSetCatalogStatus,
+  cloudSignInStaff,
+  cloudSignOut,
+  cloudStartSession,
+  cloudValidateGame,
+  ensureVisitorAuth,
+} from '../lib/cloud';
+import { isCloudMode } from '../lib/supabase';
 import { useHashRoute } from './useHashRoute';
 import { useOnline } from './useOnline';
 import {
   completeSession,
+  createEmptyData,
+  findSessionByCode as findLocalSessionByCode,
   markFoamDone as markFoamDoneRepo,
   redeemReward as redeemRewardRepo,
   startSession,
   updatePreferences,
   validateGame as validateGameRepo,
 } from './repository';
-import type { PreferencePatch, RepoResult } from './repository';
+import type { PreferencePatch, RepoError, RepoResult } from './repository';
 import {
   STORAGE_KEYS,
   loadCurrentSessionId,
@@ -41,28 +60,36 @@ import type {
 export interface FormixContextValue {
   data: AppData;
   catalog: CatalogItem[];
+  allSessions: Session[];
   currentSession: Session | null;
   soundEnabled: boolean;
   staff: StaffSession | null;
+  staffLoading: boolean;
+  cloudError: string;
+  isCloud: boolean;
   isOnline: boolean;
   route: string;
   startNewSession: () => Session;
   resumeSession: (sessionId: string) => void;
   markFoamDone: () => void;
   setPreference: (patch: PreferencePatch) => RepoResult<Session>;
-  completeCreation: () => RepoResult<Session>;
+  completeCreation: () => Promise<RepoResult<Session>>;
   validateGame: (
     code: string,
     gameType: GameType,
     result: GameResultValue,
     initials: string,
-  ) => RepoResult<Session>;
-  redeemReward: (code: string, initials: string) => RepoResult<Session>;
+  ) => Promise<RepoResult<Session>>;
+  redeemReward: (code: string, initials: string) => Promise<RepoResult<Session>>;
+  findSessionByCode: (code: string) => Promise<Session | null>;
+  refreshAllSessions: () => Promise<void>;
+  refreshCurrentSession: () => Promise<void>;
   setCatalogStatus: (itemId: string, status: ItemStatus) => void;
   resetDemo: () => void;
   prepareFair: () => void;
   clearSessions: () => void;
   login: (role: StaffRole, pin: string, initials: string) => boolean;
+  loginWithPassword: (email: string, password: string) => Promise<StaffSession | null>;
   logout: () => void;
   setSoundEnabled: (enabled: boolean) => void;
 }
@@ -80,20 +107,44 @@ function cleanInitials(raw: string): string {
   return raw.trim().slice(0, MAX_INITIALS).toUpperCase() || DEFAULT_OPERATOR;
 }
 
+function mergeSession(sessions: Session[], session: Session): Session[] {
+  const index = sessions.findIndex((item) => item.id === session.id);
+  if (index === -1) return [...sessions, session];
+  const next = [...sessions];
+  next[index] = session;
+  return next;
+}
+
+function mapCloudError(error: unknown): RepoError {
+  const message = cloudErrorMessage(error);
+  if (message.includes('already_validated')) return 'already-validated';
+  if (message.includes('session_not_found')) return 'not-found';
+  if (message.includes('no_reward')) return 'no-reward';
+  if (message.includes('not_staff')) return 'not-found';
+  if (message.includes('incomplete')) return 'incomplete';
+  return 'remote';
+}
+
 export function FormixProvider({
   children,
   initialData,
   initialCurrentSessionId,
   initialStaff,
 }: FormixProviderProps) {
-  const [data, setDataState] = useState<AppData>(() => initialData ?? loadData());
+  const [data, setDataState] = useState<AppData>(() =>
+    initialData ?? (isCloudMode ? (readData() ?? createEmptyData()) : loadData()),
+  );
   const [currentSessionId, setCurrentSessionIdState] = useState<string | null>(() =>
     initialCurrentSessionId !== undefined ? initialCurrentSessionId : loadCurrentSessionId(),
   );
   const [soundEnabled, setSoundEnabledState] = useState<boolean>(() => loadSoundEnabled());
   const [staff, setStaff] = useState<StaffSession | null>(() =>
-    initialStaff !== undefined ? initialStaff : loadStaff(),
+    initialStaff !== undefined ? initialStaff : isCloudMode ? null : loadStaff(),
   );
+  const [cloudCatalog, setCloudCatalog] = useState<CatalogItem[] | null>(null);
+  const [cloudSessions, setCloudSessions] = useState<Session[]>([]);
+  const [staffLoading, setStaffLoading] = useState(isCloudMode);
+  const [cloudError, setCloudError] = useState('');
   const dataRef = useRef(data);
   const isOnline = useOnline();
   const route = useHashRoute();
@@ -129,9 +180,42 @@ export function FormixProvider({
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
+  useEffect(() => {
+    if (!isCloudMode) {
+      setStaffLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        await ensureVisitorAuth();
+        const [catalogItems, currentStaff] = await Promise.all([
+          cloudFetchCatalog(),
+          cloudGetMyStaff(),
+        ]);
+        if (cancelled) return;
+        setCloudCatalog(catalogItems);
+        if (currentStaff) {
+          setStaff(currentStaff);
+          const sessions = await cloudFetchAllSessions();
+          if (!cancelled) setCloudSessions(sessions);
+        }
+      } catch (error) {
+        if (!cancelled) setCloudError(cloudErrorMessage(error));
+      } finally {
+        if (!cancelled) setStaffLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const catalog = useMemo(
-    () => applyCatalogOverrides(BASE_CATALOG, data.catalogOverrides),
-    [data.catalogOverrides],
+    () => cloudCatalog ?? applyCatalogOverrides(BASE_CATALOG, data.catalogOverrides),
+    [cloudCatalog, data.catalogOverrides],
   );
 
   const currentSession = useMemo(
@@ -139,11 +223,43 @@ export function FormixProvider({
     [data.sessions, currentSessionId],
   );
 
+  const allSessions = isCloudMode ? cloudSessions : data.sessions;
+
+  const refreshAllSessions = useCallback(async () => {
+    if (!isCloudMode) return;
+    try {
+      setCloudSessions(await cloudFetchAllSessions());
+      setCloudError('');
+    } catch (error) {
+      setCloudError(cloudErrorMessage(error));
+    }
+  }, []);
+
+  const refreshCurrentSession = useCallback(async () => {
+    if (!isCloudMode || !currentSessionId) return;
+    try {
+      const remote = await cloudFetchSession(currentSessionId);
+      if (remote) {
+        setData({
+          ...dataRef.current,
+          sessions: mergeSession(dataRef.current.sessions, remote),
+        });
+      }
+    } catch (error) {
+      setCloudError(cloudErrorMessage(error));
+    }
+  }, [currentSessionId, setData]);
+
   const startNewSession = useCallback((): Session => {
     const result = startSession(dataRef.current);
     if (!result.ok) throw new Error('No se pudo iniciar la sesión');
     setData(result.data);
     setCurrentSessionId(result.value.id);
+    if (isCloudMode) {
+      void cloudStartSession(result.value).catch((error) => {
+        setCloudError(cloudErrorMessage(error));
+      });
+    }
     return result.value;
   }, [setCurrentSessionId, setData]);
 
@@ -169,20 +285,66 @@ export function FormixProvider({
     [currentSessionId, setData],
   );
 
-  const completeCreation = useCallback((): RepoResult<Session> => {
+  const completeCreation = useCallback(async (): Promise<RepoResult<Session>> => {
     if (!currentSessionId) return { ok: false, error: 'not-found' };
+    const local = dataRef.current.sessions.find((session) => session.id === currentSessionId);
+    if (!local) return { ok: false, error: 'not-found' };
+    if (!local.preferences?.shapeId || !local.preferences.colorId || !local.preferences.scentId) {
+      return { ok: false, error: 'incomplete' };
+    }
+
+    if (isCloudMode) {
+      try {
+        const remote = await cloudCompleteSession(local);
+        const nextData = {
+          ...dataRef.current,
+          sessions: mergeSession(dataRef.current.sessions, remote),
+        };
+        setData(nextData);
+        setCloudSessions((previous) => mergeSession(previous, remote));
+        setCloudError('');
+        return { ok: true, data: nextData, value: remote };
+      } catch (error) {
+        setCloudError(cloudErrorMessage(error));
+        return { ok: false, error: mapCloudError(error) };
+      }
+    }
+
     const result = completeSession(dataRef.current, currentSessionId);
     if (result.ok) setData(result.data);
     return result;
   }, [currentSessionId, setData]);
 
   const validateGame = useCallback(
-    (
+    async (
       code: string,
       gameType: GameType,
       result: GameResultValue,
       initials: string,
-    ): RepoResult<Session> => {
+    ): Promise<RepoResult<Session>> => {
+      if (isCloudMode) {
+        try {
+          const outcome = await cloudValidateGame(code, gameType, result);
+          const nextData = {
+            ...dataRef.current,
+            sessions: mergeSession(dataRef.current.sessions, outcome.session),
+          };
+          setData(nextData);
+          setCloudSessions((previous) => mergeSession(previous, outcome.session));
+          setCloudError('');
+          const response: RepoResult<Session> = {
+            ok: true,
+            data: nextData,
+            value: outcome.session,
+          };
+          if (outcome.rewardLocked) response.notice = 'reward-locked';
+          return response;
+        } catch (error) {
+          setCloudError(cloudErrorMessage(error));
+          return { ok: false, error: mapCloudError(error) };
+        }
+      }
+
       const outcome = validateGameRepo(dataRef.current, code, gameType, result, initials);
       if (outcome.ok) setData(outcome.data);
       return outcome;
@@ -191,7 +353,27 @@ export function FormixProvider({
   );
 
   const redeemReward = useCallback(
-    (code: string, initials: string): RepoResult<Session> => {
+    async (code: string, initials: string): Promise<RepoResult<Session>> => {
+      if (isCloudMode) {
+        try {
+          const outcome = await cloudRedeemReward(code);
+          if (outcome.alreadyRedeemed) {
+            return { ok: false, error: 'already-redeemed' };
+          }
+          const nextData = {
+            ...dataRef.current,
+            sessions: mergeSession(dataRef.current.sessions, outcome.session),
+          };
+          setData(nextData);
+          setCloudSessions((previous) => mergeSession(previous, outcome.session));
+          setCloudError('');
+          return { ok: true, data: nextData, value: outcome.session };
+        } catch (error) {
+          setCloudError(cloudErrorMessage(error));
+          return { ok: false, error: mapCloudError(error) };
+        }
+      }
+
       const outcome = redeemRewardRepo(dataRef.current, code, initials);
       if (outcome.ok) setData(outcome.data);
       return outcome;
@@ -199,8 +381,45 @@ export function FormixProvider({
     [setData],
   );
 
+  const findSessionByCode = useCallback(async (code: string): Promise<Session | null> => {
+    if (!isCloudMode) {
+      return findLocalSessionByCode(dataRef.current, code) ?? null;
+    }
+    try {
+      const session = await cloudFindSessionByCode(code);
+      setCloudError('');
+      return session;
+    } catch (error) {
+      setCloudError(cloudErrorMessage(error));
+      return null;
+    }
+  }, []);
+
   const setCatalogStatus = useCallback(
     (itemId: string, status: ItemStatus) => {
+      if (isCloudMode) {
+        setCloudCatalog((previous) =>
+          previous?.map((item) => (item.id === itemId ? { ...item, status } : item)) ?? null,
+        );
+        void cloudSetCatalogStatus(itemId, status)
+          .then((updated) => {
+            setCloudCatalog(
+              (previous) =>
+                previous?.map((item) => (item.id === updated.id ? updated : item)) ?? null,
+            );
+            setCloudError('');
+          })
+          .catch(async (error) => {
+            setCloudError(cloudErrorMessage(error));
+            try {
+              setCloudCatalog(await cloudFetchCatalog());
+            } catch {
+              // Keep the optimistic value if the refresh also fails.
+            }
+          });
+        return;
+      }
+
       const current = dataRef.current;
       setData({
         ...current,
@@ -211,6 +430,7 @@ export function FormixProvider({
   );
 
   const resetDemo = useCallback(() => {
+    if (isCloudMode) return;
     const current = dataRef.current;
     const fresh = createSeedData();
     const realSessions = current.sessions.filter((session) => !session.isSeed);
@@ -222,6 +442,7 @@ export function FormixProvider({
   }, [setData]);
 
   const prepareFair = useCallback(() => {
+    if (isCloudMode) return;
     const current = dataRef.current;
     const currentIsSeed = current.sessions.some(
       (session) => session.id === currentSessionId && session.isSeed,
@@ -235,12 +456,14 @@ export function FormixProvider({
   }, [currentSessionId, setCurrentSessionId, setData]);
 
   const clearSessions = useCallback(() => {
+    if (isCloudMode) return;
     setData({ ...dataRef.current, sessions: [], seededAt: null });
     setCurrentSessionId(null);
   }, [setCurrentSessionId, setData]);
 
   const login = useCallback(
     (role: StaffRole, pin: string, initials: string): boolean => {
+      if (isCloudMode) return false;
       const expected = role === 'admin' ? ADMIN_PIN : OPERATOR_PIN;
       if (pin.trim() !== expected) return false;
       const session: StaffSession = {
@@ -255,9 +478,35 @@ export function FormixProvider({
     [],
   );
 
+  const loginWithPassword = useCallback(
+    async (email: string, password: string): Promise<StaffSession | null> => {
+      if (!isCloudMode) return null;
+      try {
+        const session = await cloudSignInStaff(email, password);
+        setStaff(session);
+        setCloudError('');
+        try {
+          setCloudSessions(await cloudFetchAllSessions());
+        } catch {
+          // The panel can refresh again after login.
+        }
+        return session;
+      } catch (error) {
+        setCloudError(cloudErrorMessage(error));
+        return null;
+      }
+    },
+    [],
+  );
+
   const logout = useCallback(() => {
     setStaff(null);
-    saveStaff(null);
+    setCloudSessions([]);
+    if (isCloudMode) {
+      void cloudSignOut();
+    } else {
+      saveStaff(null);
+    }
   }, []);
 
   const setSoundEnabled = useCallback((enabled: boolean) => {
@@ -268,9 +517,13 @@ export function FormixProvider({
   const value: FormixContextValue = {
     data,
     catalog,
+    allSessions,
     currentSession,
     soundEnabled,
     staff,
+    staffLoading,
+    cloudError,
+    isCloud: isCloudMode,
     isOnline,
     route,
     startNewSession,
@@ -280,11 +533,15 @@ export function FormixProvider({
     completeCreation,
     validateGame,
     redeemReward,
+    findSessionByCode,
+    refreshAllSessions,
+    refreshCurrentSession,
     setCatalogStatus,
     resetDemo,
     prepareFair,
     clearSessions,
     login,
+    loginWithPassword,
     logout,
     setSoundEnabled,
   };

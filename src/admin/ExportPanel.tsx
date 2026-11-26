@@ -11,17 +11,18 @@ import { downloadCsv } from '../lib/download';
 import { useFormix } from '../state/FormixProvider';
 
 export function ExportPanel() {
-  const { data, catalog } = useFormix();
+  const { allSessions, catalog, isCloud } = useFormix();
   const [includeDemo, setIncludeDemo] = useState(false);
 
   const exportFile = (kind: CsvKind) => {
-    const filename = csvFilename(kind, includeDemo);
-    if (kind === 'sesiones') downloadCsv(filename, sessionsCsv(data.sessions, catalog, includeDemo));
+    const withDemo = includeDemo && !isCloud;
+    const filename = csvFilename(kind, withDemo);
+    if (kind === 'sesiones') downloadCsv(filename, sessionsCsv(allSessions, catalog, withDemo));
     if (kind === 'preferencias') {
-      downloadCsv(filename, preferencesCsv(data.sessions, catalog, includeDemo));
+      downloadCsv(filename, preferencesCsv(allSessions, catalog, withDemo));
     }
-    if (kind === 'juegos') downloadCsv(filename, gamesCsv(data.sessions, includeDemo));
-    if (kind === 'premios') downloadCsv(filename, rewardsCsv(data.sessions, includeDemo));
+    if (kind === 'juegos') downloadCsv(filename, gamesCsv(allSessions, withDemo));
+    if (kind === 'premios') downloadCsv(filename, rewardsCsv(allSessions, withDemo));
   };
 
   return (
@@ -39,8 +40,9 @@ export function ExportPanel() {
           type="checkbox"
           checked={includeDemo}
           onChange={(event) => setIncludeDemo(event.target.checked)}
+          disabled={isCloud}
         />
-        <span>Incluir demo en el archivo</span>
+        <span>{isCloud ? 'Datos en Supabase' : 'Incluir demo en el archivo'}</span>
       </label>
 
       <div className="export-grid">

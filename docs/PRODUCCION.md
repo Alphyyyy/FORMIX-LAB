@@ -1,6 +1,8 @@
 # Camino a producción
 
-Este documento describe lo que falta para pasar del prototipo local a una aplicación de feria con datos entre dispositivos. **No implementa el backend**; fija la arquitectura, las reglas y el checklist para hacerlo con seguridad.
+> **Estado actual:** el proyecto ya incluye una integración básica con Supabase para sesiones anónimas, validación del equipo y panel. Este documento describe lo que falta para una operación multiusuario endurecida y el checklist productivo.
+
+Este documento describe lo que falta para pasar del prototipo local a una aplicación de feria con datos entre dispositivos. **No implementa el backend completo**; fija la arquitectura, las reglas y el checklist para hacerlo con seguridad.
 
 ## 1. Punto de partida
 

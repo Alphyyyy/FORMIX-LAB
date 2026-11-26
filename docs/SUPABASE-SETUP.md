@@ -74,18 +74,26 @@ En GitHub, los mismos valores deben estar en:
 
 La `anon key` es pública por diseño. La `service_role` no se usa en el frontend.
 
-## 5. Lo que falta después del SQL
+## 5. Integración con el frontend
 
-La migración deja la base lista, pero la aplicación todavía no la usa. La integración del frontend incluye:
+La aplicación ya incluye la capa de Supabase:
 
 - login del equipo con correo y contraseña;
 - sesión anónima del visitante;
 - guardado de preferencias y código en Supabase;
 - consulta del operador desde otro dispositivo;
-- actualización del premio en el celular del visitante;
-- panel administrativo con datos de la nube.
+- actualización del premio en el celular del visitante mediante polling;
+- panel administrativo con datos de la nube y CSV.
 
-Esa parte se implementa y prueba después de ejecutar la migración.
+Para que una build use Supabase, deben existir `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en el entorno de compilación. En local se cargan desde `.env.local`; en GitHub Actions, desde los secretos del repositorio. Si faltan, la app cae en modo local de demostración.
+
+### Probar en local con Supabase
+
+1. Confirma que `.env.local` tiene las dos variables.
+2. Ejecuta `npm run dev`.
+3. Abre `/#/equipo` y entra con tu cuenta de operador.
+4. Prueba un recorrido desde `/#/` en otra pestaña o en otro celular de la misma red.
+5. Valida el código desde la tablet/pestaña de operador.
 
 ## Seguridad
 

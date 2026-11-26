@@ -12,6 +12,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   incomplete: 'Falta elegir un molde, un color o un aroma.',
   completed: 'Esta fórmula ya está guardada.',
   'not-found': 'No encontramos la sesión. Vuelve a empezar.',
+  remote: 'No se pudo guardar en el servidor. Revisa tu conexión e inténtalo de nuevo.',
 };
 
 export function CreationPage() {
@@ -34,11 +35,11 @@ export function CreationPage() {
     return <p>Completa tu fórmula para ver el resumen.</p>;
   }
 
-  const save = () => {
+  const save = async () => {
     if (saving) return;
     setSaving(true);
     setError('');
-    const result = completeCreation();
+    const result = await completeCreation();
     if (result.ok) {
       play('success');
       navigate('/mision');

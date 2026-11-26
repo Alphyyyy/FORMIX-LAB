@@ -9,9 +9,9 @@ function formatDate(value: string | null): string {
 }
 
 export function AdminSessions({ includeDemo }: { includeDemo: boolean }) {
-  const { data, catalog } = useFormix();
+  const { allSessions, catalog } = useFormix();
   const [search, setSearch] = useState('');
-  const sessions = filterByOrigin(data.sessions, includeDemo)
+  const sessions = filterByOrigin(allSessions, includeDemo)
     .filter((session) => session.code?.toLowerCase().includes(search.trim().toLowerCase()))
     .sort((a, b) => (b.completedAt ?? b.startedAt).localeCompare(a.completedAt ?? a.startedAt));
 

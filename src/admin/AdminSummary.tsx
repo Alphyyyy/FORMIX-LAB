@@ -5,9 +5,9 @@ import { StatCard } from './StatCard';
 import { TopCombos } from './TopCombos';
 
 export function AdminSummary({ includeDemo }: { includeDemo: boolean }) {
-  const { data, catalog } = useFormix();
-  const metrics = computeMetrics(data.sessions, catalog, includeDemo);
-  const hasSeeds = data.sessions.some((session) => session.isSeed);
+  const { allSessions, catalog } = useFormix();
+  const metrics = computeMetrics(allSessions, catalog, includeDemo);
+  const hasSeeds = allSessions.some((session) => session.isSeed);
 
   return (
     <div className="admin-summary">
