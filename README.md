@@ -124,13 +124,21 @@ Publica la carpeta `dist/` en Netlify, Vercel, GitHub Pages o cualquier hosting 
 
 El repositorio incluye `.github/workflows/deploy.yml`: en cada push a `main` ejecuta pruebas, compila y publica `dist/`.
 
+**GitHub Actions no puede crear el sitio de Pages por sí solo.** Hay que habilitarlo una vez en el repositorio:
+
 1. En GitHub, abre **Settings → Pages**.
 2. En **Build and deployment → Source**, elige **GitHub Actions**.
 3. Haz push a `main` o ejecuta el workflow **Deploy to GitHub Pages** desde **Actions**.
 4. La URL quedará en `https://alphyyyy.github.io/FORMIX-LAB/`.
 5. Genera el QR desde **Difusión** usando esa URL, nunca `localhost`.
 
-El workflow también puede habilitar Pages automáticamente; si GitHub muestra un aviso de permisos, revisa que el origen sea **GitHub Actions**.
+Si Pages no aparece como opción, revisa que el repositorio sea público o que tengas permisos de administrador. El workflow no intenta crear el sitio; solo publica en el que ya existe.
+
+Errores frecuentes:
+
+- **`Resource not accessible by integration`** o **`Get Pages site failed: Not Found`**: Pages todavía no está habilitado. Activa **Settings → Pages → Source: GitHub Actions** y vuelve a ejecutar el workflow.
+- **`Node.js 20 is deprecated`**: el workflow ya usa las versiones actuales de las actions; si aparece, actualiza la rama `main` y vuelve a ejecutar.
+- **El workflow pasa pero la URL da 404**: espera unos minutos, revisa que el deployment haya terminado en **Actions** y que el origen sea **GitHub Actions**.
 
 ## Para el evento
 
