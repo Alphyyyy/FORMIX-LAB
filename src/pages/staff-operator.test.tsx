@@ -21,13 +21,14 @@ function operatorSession(overrides = {}) {
   });
 }
 
-test('staff login shows roles, fields and the demo hint', () => {
+test('staff login shows roles, fields and keeps the PIN private', () => {
   renderWithFormix(<StaffLoginPage />, { data: makeData([]) });
   expect(screen.getByRole('button', { name: 'Operador' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Administrador' })).toBeInTheDocument();
   expect(screen.getByLabelText('PIN')).toBeInTheDocument();
   expect(screen.getByLabelText('Iniciales (opcional)')).toBeInTheDocument();
-  expect(screen.getByText('Demo: Operador 2468 · Administrador 1357')).toBeInTheDocument();
+  expect(screen.getByText('El PIN te lo entrega la persona responsable de FORMIX.')).toBeInTheDocument();
+  expect(screen.queryByText(/2468|1357/)).not.toBeInTheDocument();
 });
 
 test('staff login rejects a wrong PIN', async () => {

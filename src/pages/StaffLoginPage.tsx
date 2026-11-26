@@ -114,9 +114,11 @@ export function StaffLoginPage() {
           </Button>
         </form>
 
-        <p className="staff-hint">Demo: Operador 2468 · Administrador 1357</p>
         <p className="form-note">
-          Acceso de demostración. En producción se sustituye por autenticación real con roles y
+          El PIN te lo entrega la persona responsable de FORMIX.
+        </p>
+        <p className="form-note">
+          Acceso reservado al equipo. En producción se sustituye por autenticación real con roles y
           servidor.
         </p>
       </div>
