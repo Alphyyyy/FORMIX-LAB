@@ -185,6 +185,7 @@ src/
 
 - [Guía para FORMIX](docs/GUIA-FORMIX.md) — uso, feria y lista de lo que hay que aportar.
 - [Evento en modo kiosco](docs/EVENTO-KIOSCO.md) — preparación y operación del día.
+- [Configuración de Supabase](docs/SUPABASE-SETUP.md) — migración, roles y conexión del backend.
 - [Camino a producción](docs/PRODUCCION.md) — backend, seguridad, privacidad y QA.
 - [Diseño aprobado](docs/superpowers/specs/2026-11-22-formix-lab-prototype-design.md).
 - [Plan de implementación](docs/superpowers/plans/2026-11-22-formix-lab-prototype.md).
