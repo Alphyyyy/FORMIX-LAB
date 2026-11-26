@@ -2,6 +2,10 @@
 
 Esta guía explica cómo abrir, probar y preparar el prototipo de **FORMIX LAB** sin conocimientos técnicos profundos. Para el detalle técnico, consulta el [README](../README.md) y el [camino a producción](PRODUCCION.md).
 
+> **Para el evento temporal:** usa un solo dispositivo como kiosco. La sincronización entre visitante y operador solo funciona entre pestañas del mismo navegador. Si el visitante usa su propio celular, el operador no podrá validar su código ni entregar el premio digital. La guía práctica está en [Evento en modo kiosco](EVENTO-KIOSCO.md).
+
+Los PIN de operador y administrador no aparecen en la web: te los entrega la persona responsable de FORMIX.
+
 ## 1. Qué tienes en la mano
 
 Una web que se abre desde un QR y guía a una persona por este recorrido:
@@ -51,19 +55,19 @@ La experiencia está pensada para durar unos 3–4 minutos.
 ## 4. Probar el modo operador
 
 1. Abre otra pestaña en `/#/equipo`.
-2. Pulsa **Operador**, escribe el PIN `2468` y entra.
+2. Pulsa **Operador**, escribe el PIN que te entregue el responsable y entra.
 3. Pega el código del visitante y pulsa **Buscar**.
 4. Pulsa **Ganó** o **No ganó** en cada reto. Confirma la acción.
 5. El premio se emite al validar el primer reto. Al validar el segundo, sube de nivel si corresponde.
 6. Pulsa **Marcar premio como entregado**. Solo se puede canjear una vez.
 7. Vuelve a la pestaña del visitante: la pantalla se actualiza sola.
 
-**Importante:** la sincronización es entre pestañas del mismo navegador. En una feria real, el celular del visitante y la tablet del operador necesitan el backend de producción.
+**Importante:** la sincronización es entre pestañas del mismo navegador. En una feria con visitantes en sus propios celulares y una tablet de operador hace falta el backend de producción.
 
 ## 5. Probar el panel administrativo
 
 1. Abre `/#/equipo`.
-2. Pulsa **Administrador**, escribe `1357` y entra.
+2. Pulsa **Administrador**, escribe el PIN del responsable y entra.
 3. **Resumen:** sesiones, finalización, participación, premios y preferencias.
 4. **Sesiones:** tabla con combinaciones, retos, premio y origen (demo/real).
 5. **Catálogo:** cambia el estado de moldes, colores y aromas.
@@ -90,11 +94,13 @@ Antes del evento:
 4. Exporta un CSV de prueba y ábrelo.
 5. En **Difusión**, pulsa **Preparar feria** para quitar los ejemplos.
 6. Si además quieres borrar las sesiones de prueba, usa **Borrar todas las sesiones** (pide escribir `BORRAR`).
-7. Despliega la web en el dominio definitivo.
+7. Despliega la web en el dominio definitivo (GitHub Pages, Netlify o Vercel).
 8. Genera e imprime el QR desde **Difusión**.
-9. Abre el QR desde un celular real y confirma que carga.
+9. Abre la URL en el dispositivo del puesto y confirma que carga y que el recorrido funciona.
 
 **No imprimas un QR de `localhost`**: solo funcionaría en la computadora que sirve la web.
+
+Para un evento temporal con un solo tablet, revisa [Evento en modo kiosco](EVENTO-KIOSCO.md). Si los visitantes usan su propio celular, el operador no verá sus datos en otro dispositivo.
 
 ## 7. Qué debe aportar FORMIX para producción
 

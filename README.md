@@ -39,14 +39,11 @@ Abre `http://localhost:5173`.
 | `npm run build` | Comprueba TypeScript y genera `dist/` |
 | `npm run preview` | Sirve la build de producción |
 
-## Accesos de demostración
+## Acceso del equipo
 
-| Rol | PIN |
-|---|---|
-| Operador de feria | `2468` |
-| Administrador | `1357` |
+Los PIN no se muestran en la página. El responsable de FORMIX entrega el PIN al operador y al administrador. En este prototipo el acceso es una simulación local; no es seguridad real.
 
-El acceso está en `/#/equipo` o desde el enlace “Equipo FORMIX” del pie. Los PIN son una simulación local; en producción se sustituyen por autenticación real.
+El acceso está en `/#/equipo` o desde el enlace “Equipo FORMIX” del pie.
 
 ## Rutas principales
 
@@ -73,10 +70,10 @@ El acceso está en `/#/equipo` o desde el enlace “Equipo FORMIX” del pie. Lo
 1. Abre `/#/` y pulsa **Entrar al laboratorio**.
 2. Completa la espuma, elige molde, color y aroma, y pulsa **Guardar mi creación**.
 3. Copia el código `FX-XXXXXX` de la misión.
-4. Abre otra pestaña en `/#/equipo`, entra como operador con `2468`.
+4. Abre otra pestaña en `/#/equipo`, entra como operador con el PIN que te entregue el responsable.
 5. Busca el código, registra los dos retos y pulsa **Marcar premio como entregado**.
 6. Vuelve a la primera pestaña: los retos y el premio se actualizan solos.
-7. Entra al panel como administrador con `1357`; revisa métricas y exporta los cuatro CSV.
+7. Entra al panel como administrador con su PIN; revisa métricas y exporta los cuatro CSV.
 8. En **Catálogo**, cambia un aroma a **Inactivo** y comprueba que desaparece del flujo.
 9. En **Difusión**, usa **Preparar feria** para retirar los datos de ejemplo.
 
@@ -123,7 +120,23 @@ npm run build
 
 Publica la carpeta `dist/` en Netlify, Vercel, GitHub Pages o cualquier hosting estático. El proyecto usa `base: './'` y rutas con hash, así que no necesita reglas de rewrite.
 
-Para un QR de feria, despliega en un dominio estable y genera el QR desde **Difusión**. No uses una URL de `localhost`.
+### GitHub Pages
+
+El repositorio incluye `.github/workflows/deploy.yml`: en cada push a `main` ejecuta pruebas, compila y publica `dist/`.
+
+1. En GitHub, abre **Settings → Pages**.
+2. En **Build and deployment → Source**, elige **GitHub Actions**.
+3. Haz push a `main` o ejecuta el workflow **Deploy to GitHub Pages** desde **Actions**.
+4. La URL quedará en `https://alphyyyy.github.io/FORMIX-LAB/`.
+5. Genera el QR desde **Difusión** usando esa URL, nunca `localhost`.
+
+El workflow también puede habilitar Pages automáticamente; si GitHub muestra un aviso de permisos, revisa que el origen sea **GitHub Actions**.
+
+## Para el evento
+
+Si el evento es temporal y no hay backend, la opción recomendada es **modo kiosco**: un solo tablet o laptop en el puesto, con dos pestañas del mismo navegador (visitante y operador). Un QR abierto en teléfonos personales no sincroniza con el operador.
+
+Lee la guía práctica: [Evento en modo kiosco](docs/EVENTO-KIOSCO.md).
 
 ## Personalización
 
@@ -158,11 +171,12 @@ src/
 - Sin sincronización entre dispositivos.
 - La primera carga requiere internet; no hay service worker.
 - Catálogo, fotografías, mascota y jingle son provisionales.
-- Los PIN de demostración son visibles a propósito.
+- El acceso del equipo es una simulación local, no seguridad real.
 
 ## Documentación
 
 - [Guía para FORMIX](docs/GUIA-FORMIX.md) — uso, feria y lista de lo que hay que aportar.
+- [Evento en modo kiosco](docs/EVENTO-KIOSCO.md) — preparación y operación del día.
 - [Camino a producción](docs/PRODUCCION.md) — backend, seguridad, privacidad y QA.
 - [Diseño aprobado](docs/superpowers/specs/2026-11-22-formix-lab-prototype-design.md).
 - [Plan de implementación](docs/superpowers/plans/2026-11-22-formix-lab-prototype.md).
